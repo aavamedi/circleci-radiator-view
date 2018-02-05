@@ -210,7 +210,6 @@
       var backend = buildBackend(settings, createJobList) || displayError('Invalid backend ' + settings.mode)
       setInterval(backend, updateInterval)
       backend()
-      setInterval(function(){location.reload(true)}, 24 * 60 * 60 * 1000)
    }
 
    function extendWithDefaults(settings) {
