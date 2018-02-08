@@ -153,12 +153,11 @@ var circleBackend = function(settings, resultCallback) {
             var branch = repository.branches[branchName]
             var buildIsRunning = branch.running_builds.length != 0
             var build = buildIsRunning ? branch.running_builds[0] : branch.recent_builds[0]
-            var status = buildIsRunning ? build.status : branch.latest_workflows.build_and_deploy.status
             return {
                repository: repository.reponame,
                branch: branchName,
                started: new Date(build.pushed_at),
-               state: status,
+               state: branch.latest_workflows.build_and_deploy.status,
                commit: {
                   created: new Date(build.pushed_at),
                   author: null,
