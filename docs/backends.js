@@ -151,18 +151,16 @@ var circleBackend = function(settings, resultCallback) {
 
     function workflowStatus(repository, branchName, workflowName) {
       var branch = repository.branches[branchName]
-      var buildIsRunning = branch.latest_workflows[workflowName].status === "running"
-      var build = buildIsRunning ? branch.running_builds[0] : branch.recent_builds[0]
+      var workflow = branch.latest_workflows[workflowName]
       return {
         repository: repository.reponame,
         branch: branchName,
-        started: new Date(build.pushed_at),
-        state: branch.latest_workflows[workflowName].status,
+        started: new Date(workflow.created_at),
+        state: workflow.status,
         workflowName,
         commit: {
-          created: new Date(build.pushed_at),
-          author: null,
-          hash: build.vcs_revision
+          created: new Date(workflow.created_at),
+          author: null
         }
       }
     }
