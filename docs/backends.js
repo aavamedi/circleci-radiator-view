@@ -144,43 +144,44 @@ var travisBackend = function(settings, resultCallback) {
 var circleBackend = function(settings, resultCallback) {
    var url = settings.url + '?circle-token=' + settings.token
 
-   httpRequest(url, function(err, data) {
-      if (err) {
-         return resultCallback(err)
-      }
-      function workflowStatus(repository, branchName, workflowName) {
+  httpRequest(url, function (err, data) {
+    if (err) {
+      return resultCallback(err)
+    }
+
+    function workflowStatus(repository, branchName, workflowName) {
       var branch = repository.branches[branchName]
       var buildIsRunning = branch.latest_workflows[workflowName].status === "running"
       var build = buildIsRunning ? branch.running_builds[0] : branch.recent_builds[0]
       return {
-          repository: repository.reponame,
-          branch: branchName,
-          started: new Date(build.pushed_at),
-          state: branch.latest_workflows[workflowName].status,
-          workflowName,
-          commit: {
-            created: new Date(build.pushed_at),
-            author: null,
-            hash: build.vcs_revision
-          }
-         }
+        repository: repository.reponame,
+        branch: branchName,
+        started: new Date(build.pushed_at),
+        state: branch.latest_workflows[workflowName].status,
+        workflowName,
+        commit: {
+          created: new Date(build.pushed_at),
+          author: null,
+          hash: build.vcs_revision
+        }
       }
+    }
 
-      var builds = data.reduce(function (acc, repository) {
+    var builds = data.reduce(function (acc, repository) {
       return acc.concat(flatMap(Object.keys(repository.branches), function (branchName) {
-       if (branchName === "master") {
-         return [
-            workflowStatus(repository, branchName, "build_and_deploy"), 
+        if (branchName === "master") {
+          return [
+            workflowStatus(repository, branchName, "build_and_deploy"),
             workflowStatus(repository, branchName, "smoke_test")
-         ]
-       }
-       return [workflowStatus(repository, branchName, "build_and_deploy")]
+          ]
+        }
+        return [workflowStatus(repository, branchName, "build_and_deploy")]
       }))
-      }, [])
-      resultCallback(undefined, builds)
-   }, {
-      Accept: 'application/json'
-   })
+    }, [])
+    resultCallback(undefined, builds)
+  }, {
+    Accept: 'application/json'
+  })
 }
 
 function flatMap(xs, callback) {
