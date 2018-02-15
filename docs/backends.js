@@ -148,28 +148,43 @@ var circleBackend = function(settings, resultCallback) {
       if (err) {
          return resultCallback(err)
       }
-      var builds = data.reduce(function(acc, repository) {
-         return acc.concat(Object.keys(repository.branches).map(function(branchName) {
-            var branch = repository.branches[branchName]
-            var buildIsRunning = branch.running_builds.length != 0
-            var build = buildIsRunning ? branch.running_builds[0] : branch.recent_builds[0]
-            return {
-               repository: repository.reponame,
-               branch: branchName,
-               started: new Date(build.pushed_at),
-               state: branch.latest_workflows.build_and_deploy.status,
-               commit: {
-                  created: new Date(build.pushed_at),
-                  author: null,
-                  hash: build.vcs_revision
-               },
-            }
-         }))
+      function workflowStatus(repository, branchName, workflowName) {
+      var branch = repository.branches[branchName]
+      var buildIsRunning = branch.latest_workflows[workflowName].status === "running"
+      var build = buildIsRunning ? branch.running_builds[0] : branch.recent_builds[0]
+      return {
+          repository: repository.reponame,
+          branch: branchName,
+          started: new Date(build.pushed_at),
+          state: branch.latest_workflows[workflowName].status,
+          workflowName,
+          commit: {
+            created: new Date(build.pushed_at),
+            author: null,
+            hash: build.vcs_revision
+          }
+         }
+      }
+
+      var builds = data.reduce(function (acc, repository) {
+      return acc.concat(flatMap(Object.keys(repository.branches), function (branchName) {
+       if (branchName === "master") {
+         return [
+            workflowStatus(repository, branchName, "build_and_deploy"), 
+            workflowStatus(repository, branchName, "smoke_test")
+         ]
+       }
+       return [workflowStatus(repository, branchName, "build_and_deploy")]
+      }))
       }, [])
       resultCallback(undefined, builds)
    }, {
       Accept: 'application/json'
    })
+}
+
+function flatMap(xs, callback) {
+   return xs.reduce(function (memo, x) { return memo.concat(callback(x)); }, []);
 }
 
 var jenkinsBackend = function(settings, resultCallback) {
