@@ -29,7 +29,7 @@ function buildBackend(settings, callback) {
             return callback(err)
          }
          var builds = data.filter(branchFilter)
-         builds = _.uniqBy(builds, function(b) {return b.repository + b.branch})
+         builds = _.uniqBy(builds, function(b) {return b.repository + b.branch + b.workflowName})
          builds = builds.sort(function(a, b) {return a.started.getTime() - b.started.getTime()})
          callback(undefined, builds)
       })
