@@ -166,7 +166,11 @@ var circleBackend = function(settings, resultCallback) {
     }
 
     var builds = data.reduce(function (acc, repository) {
-      return acc.concat(flatMap(Object.keys(repository.branches), function (branchName) {
+      var branchesToShow = Object.keys(repository.branches).filter(branchName => {
+        const isDependabotBranch = branchName.indexOf("dependabot") > -1
+        return !isDependabotBranch
+      })
+      return acc.concat(flatMap(branchesToShow, function (branchName) {
         if (branchName === "master") {
           return [
             workflowStatus(repository, branchName, "build_and_deploy"),
