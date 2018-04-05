@@ -191,13 +191,11 @@ var circleBackend = function(settings, resultCallback) {
           flatMap(branchesToShow, function(branchName) {
             if (branchName === "master") {
               return [
-                workflowStatus(repository, branchName, "DeployMaster"),
+                workflowStatus(repository, branchName, "BuildAndDeploy"),
                 workflowStatus(repository, branchName, "SmokeTest")
               ];
             }
-            return [
-              workflowStatus(repository, branchName, "BuildPullRequests")
-            ];
+            return [workflowStatus(repository, branchName, "BuildAndDeploy")];
           })
         );
       }, []);
