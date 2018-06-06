@@ -167,6 +167,9 @@ var circleBackend = function(settings, resultCallback) {
       function workflowStatus(repository, branchName, workflowName) {
         var branch = repository.branches[branchName];
         var workflow = branch.latest_workflows[workflowName];
+        if (!workflow) {
+          return undefined
+        }
         return {
           repository: repository.reponame,
           branch: branchName,
@@ -196,7 +199,7 @@ var circleBackend = function(settings, resultCallback) {
               ];
             }
             return [workflowStatus(repository, branchName, "Verify")];
-          })
+          }).filter(status => !!status)
         );
       }, []);
       resultCallback(undefined, builds);
