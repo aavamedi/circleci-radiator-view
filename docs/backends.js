@@ -166,6 +166,9 @@ var circleBackend = function(settings, resultCallback) {
 
       function workflowStatus(repository, branchName, workflowName) {
         var branch = repository.branches[branchName]
+        if (!(branch && branch.latest_workflows)) {
+          return undefined
+        }
         var workflow = branch.latest_workflows[workflowName]
         if (!workflow) {
           return undefined
@@ -185,10 +188,7 @@ var circleBackend = function(settings, resultCallback) {
 
       var builds = data.reduce(function(acc, repository) {
         var branchesToShow = Object.keys(repository.branches).filter(
-          branchName => {
-            const isDependabotBranch = branchName.indexOf("dependabot") > -1
-            return !isDependabotBranch
-          }
+          branchName => !branchName.includes("greenkeeper")
         )
         return acc.concat(
           flatMap(branchesToShow, function(branchName) {
