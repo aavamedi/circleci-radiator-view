@@ -14,30 +14,30 @@ Build type:
 */
 
 function buildBackend(settings, callback) {
-  var backend = circleBackend;
+  var backend = circleBackend
   if (settings.mode === "travis") {
-    backend = travisBackend;
+    backend = travisBackend
   } else if (settings.mode === "jenkins") {
-    backend = jenkinsBackend;
+    backend = jenkinsBackend
   }
   var branchFilter = function(build) {
-    return settings.branch ? build.branch.match(settings.branch) : true;
-  };
+    return settings.branch ? build.branch.match(settings.branch) : true
+  }
   return function() {
     backend(settings, function(err, data) {
       if (err) {
-        return callback(err);
+        return callback(err)
       }
-      var builds = data.filter(branchFilter);
+      var builds = data.filter(branchFilter)
       builds = _.uniqBy(builds, function(b) {
-        return b.repository + b.branch + b.workflowName;
-      });
+        return b.repository + b.branch + b.workflowName
+      })
       builds = builds.sort(function(a, b) {
-        return a.started.getTime() - b.started.getTime();
-      });
-      callback(undefined, builds);
-    });
-  };
+        return a.started.getTime() - b.started.getTime()
+      })
+      callback(undefined, builds)
+    })
+  }
 }
 
 function backendOptions() {
@@ -57,16 +57,16 @@ function backendOptions() {
       url: undefined,
       token: undefined
     }
-  };
+  }
 }
 
 function httpRequest(url, handler /*, headers */) {
-  var request = new XMLHttpRequest();
-  var headers = arguments[2] || {};
-  request.open("GET", url, true);
+  var request = new XMLHttpRequest()
+  var headers = arguments[2] || {}
+  request.open("GET", url, true)
   Object.keys(headers).forEach(function(headerName) {
-    request.setRequestHeader(headerName, headers[headerName]);
-  });
+    request.setRequestHeader(headerName, headers[headerName])
+  })
   request.onload = function() {
     if (request.status === 401 || request.status === 403) {
       handler(
@@ -75,45 +75,45 @@ function httpRequest(url, handler /*, headers */) {
           " " +
           request.responseText +
           ")"
-      );
+      )
     } else if (request.status >= 200 && request.status < 400) {
       try {
-        var data = JSON.parse(request.responseText);
-        handler(undefined, data);
+        var data = JSON.parse(request.responseText)
+        handler(undefined, data)
       } catch (exc) {
-        console.log("Error fetching URL", url, request.responseText);
-        handler(exc);
+        console.log("Error fetching URL", url, request.responseText)
+        handler(exc)
       }
     } else {
-      handler("Error getting URL " + url + ":" + request.status);
+      handler("Error getting URL " + url + ":" + request.status)
     }
-  };
-  request.send();
+  }
+  request.send()
 }
 
 var travisBackend = function(settings, resultCallback) {
   var travisRequest = function(url, cb) {
     var handler = function(err, data) {
       if (err) {
-        resultCallback(err);
+        resultCallback(err)
       } else {
-        cb(data);
+        cb(data)
       }
-    };
+    }
     httpRequest(url, handler, {
       Accept: "application/vnd.travis-ci.2+json",
       Authorization: "token " + settings.token
-    });
-  };
+    })
+  }
 
   var translateBuild = function(reponame, commits) {
     var findCommit = function(commit) {
       return commits.find(function(c) {
-        return c.id == commit;
-      });
-    };
+        return c.id == commit
+      })
+    }
     return function(b) {
-      var commit = findCommit(b.commit_id);
+      var commit = findCommit(b.commit_id)
       return {
         repository: reponame,
         branch: commit.branch,
@@ -124,49 +124,49 @@ var travisBackend = function(settings, resultCallback) {
           author: commit.author_name,
           hash: commit.sha
         }
-      };
-    };
-  };
+      }
+    }
+  }
 
   var parseBuilds = function(repos) {
-    var responses = [];
+    var responses = []
     repos.forEach(function(r) {
       travisRequest(settings.url + "/" + r.name + "/builds", function(data) {
-        var reponame = r.name.split("/")[1];
-        var builds = data.builds.map(translateBuild(reponame, data.commits));
-        responses.push(builds);
+        var reponame = r.name.split("/")[1]
+        var builds = data.builds.map(translateBuild(reponame, data.commits))
+        responses.push(builds)
         if (responses.length === repos.length) {
           var result = responses.reduce(function(acc, item) {
-            return item.length > 0 ? acc.concat(item) : acc;
-          }, []);
-          resultCallback(undefined, result);
+            return item.length > 0 ? acc.concat(item) : acc
+          }, [])
+          resultCallback(undefined, result)
         }
-      });
-    });
-  };
+      })
+    })
+  }
 
   travisRequest(settings.url, function(data) {
     parseBuilds(
       data.repos.map(function(repo) {
-        return { id: repo.id, name: repo.slug };
+        return { id: repo.id, name: repo.slug }
       })
-    );
-  });
-};
+    )
+  })
+}
 
 var circleBackend = function(settings, resultCallback) {
-  var url = settings.url + "?circle-token=" + settings.token;
+  var url = settings.url + "?circle-token=" + settings.token
 
   httpRequest(
     url,
     function(err, data) {
       if (err) {
-        return resultCallback(err);
+        return resultCallback(err)
       }
 
       function workflowStatus(repository, branchName, workflowName) {
-        var branch = repository.branches[branchName];
-        var workflow = branch.latest_workflows[workflowName];
+        var branch = repository.branches[branchName]
+        var workflow = branch.latest_workflows[workflowName]
         if (!workflow) {
           return undefined
         }
@@ -180,67 +180,67 @@ var circleBackend = function(settings, resultCallback) {
             created: new Date(workflow.created_at),
             author: null
           }
-        };
+        }
       }
 
       var builds = data.reduce(function(acc, repository) {
         var branchesToShow = Object.keys(repository.branches).filter(
           branchName => {
-            const isDependabotBranch = branchName.indexOf("dependabot") > -1;
-            return !isDependabotBranch;
+            const isDependabotBranch = branchName.indexOf("dependabot") > -1
+            return !isDependabotBranch
           }
-        );
+        )
         return acc.concat(
           flatMap(branchesToShow, function(branchName) {
             if (branchName === "master") {
               return [
                 workflowStatus(repository, branchName, "VerifyAndDeploy"),
                 workflowStatus(repository, branchName, "SmokeTest")
-              ];
+              ]
             }
-            return [workflowStatus(repository, branchName, "Verify")];
+            return [workflowStatus(repository, branchName, "Verify")]
           }).filter(status => !!status)
-        );
-      }, []);
-      resultCallback(undefined, builds);
+        )
+      }, [])
+      resultCallback(undefined, builds)
     },
     {
       Accept: "application/json"
     }
-  );
-};
+  )
+}
 
 function flatMap(xs, callback) {
   return xs.reduce(function(memo, x) {
-    return memo.concat(callback(x));
-  }, []);
+    return memo.concat(callback(x))
+  }, [])
 }
 
 var jenkinsBackend = function(settings, resultCallback) {
   var jenkinsRequest = function(url, cb) {
     var handler = function(err, data) {
       if (err) {
-        resultCallback(err);
+        resultCallback(err)
       } else {
-        cb(data);
+        cb(data)
       }
-    };
-    var headers = {};
-    if (settings.token) {
-      headers.Authorization = "Basic " + window.btoa(settings.token);
     }
-    httpRequest(url, handler, headers);
-  };
+    var headers = {}
+    if (settings.token) {
+      headers.Authorization = "Basic " + window.btoa(settings.token)
+    }
+    httpRequest(url, handler, headers)
+  }
 
   var findLastCommit = function(builds) {
     if (!builds) {
-      return undefined;
+      return undefined
     }
     var lastBuildWithCommits = builds.filter(function(b) {
-      return b.changeSets && b.changeSets.length > 0;
-    })[0];
+      return b.changeSets && b.changeSets.length > 0
+    })[0]
     if (!lastBuildWithCommits) {
-      return undefined;
+      return undefined
     }
     var lastCommits = lastBuildWithCommits.changeSets[0].items.map(function(
       item
@@ -249,74 +249,74 @@ var jenkinsBackend = function(settings, resultCallback) {
         created: new Date(item.timestamp),
         author: item.author.fullName,
         hash: item.commitId
-      };
-    });
-    return lastCommits[lastCommits.length - 1];
-  };
+      }
+    })
+    return lastCommits[lastCommits.length - 1]
+  }
 
   var findBuildReason = function(builds) {
     if (!builds) {
-      return undefined;
+      return undefined
     }
     var lastBuildWithActions = builds.filter(function(b) {
-      return b.actions && b.actions.length > 0;
-    })[0];
+      return b.actions && b.actions.length > 0
+    })[0]
     if (!lastBuildWithActions) {
-      return undefined;
+      return undefined
     }
     var reason = lastBuildWithActions.actions
       .filter(function(a) {
-        return a._class == "hudson.model.CauseAction";
+        return a._class == "hudson.model.CauseAction"
       })
       .reduce(function(acc, a) {
         return acc.concat(
           a.causes.map(function(c) {
-            return c.shortDescription;
+            return c.shortDescription
           })
-        );
+        )
       }, [])
-      .join(";");
+      .join(";")
 
     return {
       author: reason
-    };
-  };
+    }
+  }
 
   var findResponsible = function(job) {
     if (!job.actions) {
-      return undefined;
+      return undefined
     }
     var contributorActions = job.actions.filter(function(action) {
-      return action.contributor || action.contributorDisplayName;
-    });
-    var contributor = contributorActions[0];
+      return action.contributor || action.contributorDisplayName
+    })
+    var contributor = contributorActions[0]
     if (!contributor) {
-      return undefined;
+      return undefined
     }
     return {
       created: new Date(job.timestamp),
       author: contributor.contributorDisplayName || contributor.contributor
-    };
-  };
+    }
+  }
 
   var url =
     settings.url +
-    "/api/json?depth=4&tree=name,url,jobs[name,url,jobs[name,url,actions[contributor,contributorDisplayName,contributorEmail],buildable,builds[result,building,actions[causes[shortDescription]],changeSets[items[author[fullName],timestamp,commitId]],timestamp]]]";
+    "/api/json?depth=4&tree=name,url,jobs[name,url,jobs[name,url,actions[contributor,contributorDisplayName,contributorEmail],buildable,builds[result,building,actions[causes[shortDescription]],changeSets[items[author[fullName],timestamp,commitId]],timestamp]]]"
   jenkinsRequest(url, function(data) {
     var builds = data.jobs.reduce(function(acc, project) {
       return acc.concat(
         project.jobs.reduce(function(acc, job) {
           if (!job.buildable) {
-            return acc;
+            return acc
           }
-          var build = job.builds[0] || {};
-          var result = "failed";
+          var build = job.builds[0] || {}
+          var result = "failed"
           if (build.building) {
-            result = "started";
+            result = "started"
           } else if (build.result === "ABORTED") {
-            result = "canceled";
+            result = "canceled"
           } else if (build.result === "SUCCESS") {
-            result = "success";
+            result = "success"
           }
 
           return acc.concat({
@@ -328,10 +328,10 @@ var jenkinsBackend = function(settings, resultCallback) {
               findLastCommit(job.builds) ||
               findResponsible(job) ||
               findBuildReason(job.builds)
-          });
+          })
         }, [])
-      );
-    }, []);
-    resultCallback(undefined, builds);
-  });
-};
+      )
+    }, [])
+    resultCallback(undefined, builds)
+  })
+}

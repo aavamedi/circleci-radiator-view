@@ -8,14 +8,12 @@ Supported backends are [CircleCI](https://circleci.com/), [Travis CI](https://tr
 
 ![Circle CI Radiator view](/readme_radiator.png?raw=true "Circle CI Radiator view")
 
-*Pull requests are welcome.*
-
+_Pull requests are welcome._
 
 ## Setup for CircleCI
 
 1. Get your API token from [your CirleCI account settings](https://circleci.com/account/api)
 2. Open `index.html`
-
 
 ## Setup for Travis CI
 
@@ -34,43 +32,38 @@ any required parameters are missing.
 
 - mode
 
-   select backend to use, _circle_ (default), _travis_ or _jenkins_
+  select backend to use, _circle_ (default), _travis_ or _jenkins_
 
 - branch
 
-   Select the branch to show (from all repos found in the API end point).
-   Useful if your repos contain only a single branch (master, release etc) that should be visible
-   in the radiator view.
+  Select the branch to show (from all repos found in the API end point).
+  Useful if your repos contain only a single branch (master, release etc) that should be visible
+  in the radiator view.
 
 - token
 
-   The auth token token to use. NOTE: CirleCI API tokens have read and write access. When you
-   use the query parameter, the token is visible in your browser history.
+  The auth token token to use. NOTE: CirleCI API tokens have read and write access. When you
+  use the query parameter, the token is visible in your browser history.
 
 - url
 
-   Only for jenkins, really: the Jenkins job URL
-
+  Only for jenkins, really: the Jenkins job URL
 
 Example with all parameters in use:
 
-   https://yourdomain.com/?mode=circle&branch=release&token=835li2ixxxxxxxxxxxxxxxxxxxxxxxxxx1sd41
-
+https://yourdomain.com/?mode=circle&branch=release&token=835li2ixxxxxxxxxxxxxxxxxxxxxxxxxx1sd41
 
 Example where the token is entered in an input field:
 
-   https://yourdomain.com/?mode=travis&branch=master
-
+https://yourdomain.com/?mode=travis&branch=master
 
 Jenkins example:
 
-   https://yourdomain.com/?mode=jenkins&token=jenkins_token&url=http://localhost:8080/jenkins/job/My%20Job
-
+https://yourdomain.com/?mode=jenkins&token=jenkins_token&url=http://localhost:8080/jenkins/job/My%20Job
 
 ## Hosted version
 
 Available here: https://sampsakuronen.github.io/circleci-radiator-view/
-
 
 ## Licence
 
