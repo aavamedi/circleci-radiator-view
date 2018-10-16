@@ -194,11 +194,11 @@ var circleBackend = function(settings, resultCallback) {
           flatMap(branchesToShow, function(branchName) {
             if (branchName === "master") {
               return [
-                workflowStatus(repository, branchName, "VerifyAndDeploy"),
-                workflowStatus(repository, branchName, "SmokeTest")
+                workflowStatus(repository, branchName, "verify_and_deploy"),
+                workflowStatus(repository, branchName, "smoke_test")
               ]
             }
-            return [workflowStatus(repository, branchName, "Verify")]
+            return [workflowStatus(repository, branchName, "verify")]
           }).filter(status => !!status)
         )
       }, [])
